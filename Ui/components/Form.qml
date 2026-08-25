@@ -1,7 +1,6 @@
 import QtQuick
 import QtQuick.Layouts
 import QtQuick.Controls
-import LUNARA 1.0
 
 Item {
     property string email: ""
