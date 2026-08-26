@@ -1,28 +1,31 @@
-# Qt Modules Structure
+# Qt QML Modules Structure
 
-This project demonstrates a modular Qt 6/QML application structure. Each feature area is kept in its own directory and exposed as a CMake target.
+This project demonstrates a modular Qt 6/QML application structure. The application is split into separate CMake/QML modules for the UI, controllers, and reusable C++ logic.
 
 ## Directory Structure
 
 ```text
-Structure/
-├── CMakeLists.txt        # Main application and module configuration
-├── main.cpp              # Application entry point
-├── Core/                 # Reusable C++ business logic
+Qt-Qml-Modules-Structure/
+├── CMakeLists.txt          # Main application and module configuration
+├── main.cpp                # Application entry point
+├── Core/                   # Reusable C++ logic
 │   ├── CMakeLists.txt
-│   ├── LoginAuth.hpp
-│   └── LoginAuth.cpp
-├── Controller/           # Application-facing controllers
+│   ├── Auth.hpp
+│   └── Auth.cpp
+├── Controller/             # Application-facing C++ controllers
 │   ├── CMakeLists.txt
-│   ├── appController.hpp
-│   └── appController.cpp
-└── Ui/                   # QML presentation layer
+│   ├── Controller.hpp
+│   └── Controller.cpp
+└── Ui/                     # QML presentation module
     ├── CMakeLists.txt
     ├── Main.qml
+    ├── pages/
+    │   └── Home.qml
     ├── components/
-    ├── Pages/
-    ├── fonts/
-    ├── images/
+    │   └── Sidebar.qml
+    ├── assets/
+    │   └── images/
+    │       └── fiverrlogo.png
     └── assets.qrc
 ```
 
@@ -34,24 +37,16 @@ Structure/
 
 ### Controller
 
-`Controller` connects the UI to Core functionality. Controllers expose operations to QML using `Q_INVOKABLE`, properties, and signals.
-
-The Controller module includes headers from Core through CMake:
-
-```cmake
-target_include_directories(Controller PRIVATE
-    ${CMAKE_SOURCE_DIR}/Core
-)
-```
+`Controller` connects the UI to Core functionality. Controllers expose operations to QML using `Q_INVOKABLE`, properties, and signals. The module links against `Core` in `Controller/CMakeLists.txt`.
 
 ### Ui
 
-`Ui` contains QML files, reusable components, pages, and static resources. It is registered as the QML module with URI `UI`.
+`Ui` contains QML files, reusable components, pages, and static resources. It is registered as the QML module with URI `Ui`.
 
 The application loads the root QML component in `main.cpp`:
 
 ```cpp
-engine.loadFromModule("UI", "Main");
+engine.loadFromModule("Ui", "Main");
 ```
 
 ## CMake Module Pattern
@@ -90,7 +85,8 @@ qt_add_qml_module(MyUiModule
     VERSION 1.0
     QML_FILES
         Main.qml
-        components/Button.qml
+        pages/Home.qml
+        components/Sidebar.qml
 )
 ```
 
@@ -98,9 +94,9 @@ The application target must link the modules it uses:
 
 ```cmake
 target_link_libraries(app PRIVATE
+    Controller
     Core
     Ui
-    Controller
 )
 ```
 
@@ -120,10 +116,8 @@ qt_add_qml_module(Core
     URI Core
     VERSION 1.0
     SOURCES
-        LoginAuth.cpp
-        LoginAuth.hpp
-        UserProfile.cpp
-        UserProfile.hpp
+        Auth.cpp
+        Auth.hpp
 )
 ```
 
@@ -133,21 +127,21 @@ Add the file to the `QML_FILES` list in `Ui/CMakeLists.txt`:
 
 ```cmake
 qt_add_qml_module(Ui
-    URI UI
-    VERSION 1.0
+    URI Ui
     QML_FILES
         Main.qml
-        Pages/Login.qml
-        Pages/Settings.qml
-        components/InputField.qml
+        pages/Home.qml
+        components/Sidebar.qml
+    RESOURCES
+        assets.qrc
 )
 ```
 
-Keep reusable controls in `components/` and application screens in `Pages/`.
+Keep reusable controls in `components/` and application screens in `pages/`. Static assets are stored under `assets/` and listed in `assets.qrc`.
 
 ## Build
 
-Open the project in Qt Creator and select a Qt 6 kit with a working CMake and compiler. Then configure and build the project.
+Open the project in Qt Creator and select a Qt 6.10 or newer kit with a working CMake and compiler. Then configure and build the project.
 
 From a configured terminal, the equivalent commands are:
 
@@ -156,7 +150,7 @@ cmake -S . -B build
 cmake --build build --parallel
 ```
 
-The executable is generated inside the selected build directory.
+The executable is generated inside the selected build directory. Build output should remain untracked; this repository ignores `build/` and `.qtcreator/`.
 
 ## Dependency Direction
 
