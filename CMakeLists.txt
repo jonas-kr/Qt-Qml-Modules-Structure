@@ -1,28 +1,51 @@
 cmake_minimum_required(VERSION 3.16)
 
-project(ModularStructure VERSION 1.0 LANGUAGES CXX)
+project(NewStruct VERSION 0.1 LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_AUTORCC ON)
 set(CMAKE_AUTOMOC ON)
 
-find_package(Qt6 REQUIRED COMPONENTS Quick Qml)
+find_package(Qt6 REQUIRED COMPONENTS Quick)
+
+qt_standard_project_setup(REQUIRES 6.10)
+
+# Content of downloaded design from Figma to Qt or similar
+if (EXISTS "${CMAKE_CURRENT_LIST_DIR}/importedcontent/CMakeLists.txt")
+    add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/importedcontent)
+endif()
 
 qt_add_executable(app
     main.cpp
 )
 
-add_subdirectory(Core)
 add_subdirectory(Ui)
+add_subdirectory(Core)
 add_subdirectory(Controller)
 
-target_include_directories(app PRIVATE Core)
 
-target_link_libraries(app PRIVATE
+# Qt for iOS sets MACOSX_BUNDLE_GUI_IDENTIFIER automatically since Qt 6.1.
+# If you are developing for iOS or macOS you should consider setting an
+# explicit, fixed bundle identifier manually though.
+set_target_properties(app PROPERTIES
+#    MACOSX_BUNDLE_GUI_IDENTIFIER com.example.app
+    MACOSX_BUNDLE_BUNDLE_VERSION ${PROJECT_VERSION}
+    MACOSX_BUNDLE_SHORT_VERSION_STRING ${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}
+    MACOSX_BUNDLE TRUE
+    WIN32_EXECUTABLE TRUE
+)
+
+target_link_libraries(app
+    PRIVATE
     Qt6::Quick
-    Qt6::Qml
     Core
     Ui
     Controller
+)
+
+install(TARGETS app
+    BUNDLE DESTINATION .
+    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
 )
